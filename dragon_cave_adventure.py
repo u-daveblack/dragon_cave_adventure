@@ -65,6 +65,7 @@ OBSTACLE_SIZE = (50, 50)
 # Dropped Rock properties
 DROPPED_ROCK_SIZE = (15, 15)
 DROPPED_ROCK_GRAVITY = 0.8
+LAND_SOUND_RADIUS = 100 # How far away the dragon hears a rock land
 
 # Level properties
 GROUND_LEVEL = SCREEN_HEIGHT - 40
@@ -72,6 +73,431 @@ SCROLL_THRESH = SCREEN_WIDTH // 3 # How far player moves before screen scrolls
 
 # Asset paths (optional)
 ASSETS_FOLDER = "assets"
+
+# Define level data structure (outside the Game class)
+LEVELS = [
+    # Level 1 (Original Layout - slightly adjusted)
+    {
+        "platforms": [
+            (0, GROUND_LEVEL, 2000, 40), # Ground floor - make sure it covers level width
+            (200, SCREEN_HEIGHT - 150, 150, 20),
+            (500, SCREEN_HEIGHT - 250, 100, 20),
+            (750, SCREEN_HEIGHT - 180, 120, 20),
+            (1000, SCREEN_HEIGHT - 300, 150, 20),
+            (1300, SCREEN_HEIGHT - 200, 100, 20),
+        ],
+        "treasures": [
+            (250, SCREEN_HEIGHT - 150),
+            (550, SCREEN_HEIGHT - 250),
+            (150, GROUND_LEVEL),
+            (900, GROUND_LEVEL),
+            (1100, SCREEN_HEIGHT - 300),
+            (1400, GROUND_LEVEL),
+        ],
+        "obstacles": [
+            (400, GROUND_LEVEL),
+            (1200, GROUND_LEVEL),
+        ],
+        "dragon_start": (1600, GROUND_LEVEL), # Start dragon further away
+        "exit_pos": (1900, GROUND_LEVEL),
+        "level_width": 2000,
+    },
+    # Level 2 (More gaps, slightly trickier platforms)
+    {
+        "platforms": [
+            (0, GROUND_LEVEL, 300, 40),
+            (400, GROUND_LEVEL, 500, 40), # Gap in ground
+            (1000, GROUND_LEVEL, 1000, 40),# Another gap
+            (150, SCREEN_HEIGHT - 120, 100, 20),
+            (350, SCREEN_HEIGHT - 200, 80, 20), # Smaller platform
+            (600, SCREEN_HEIGHT - 150, 150, 20),
+            (850, SCREEN_HEIGHT - 280, 100, 20),
+            (1100, SCREEN_HEIGHT - 200, 120, 20),
+            (1400, SCREEN_HEIGHT - 100, 150, 20),
+            (1700, SCREEN_HEIGHT - 250, 80, 20),
+        ],
+        "treasures": [
+            (200, SCREEN_HEIGHT - 120),
+            (400, SCREEN_HEIGHT - 200),
+            (650, SCREEN_HEIGHT - 150),
+             (50, GROUND_LEVEL),
+            (900, SCREEN_HEIGHT - 280),
+            (1150, SCREEN_HEIGHT - 200),
+            (1450, SCREEN_HEIGHT - 100),
+            (1750, SCREEN_HEIGHT - 250),
+            (1950, GROUND_LEVEL),
+        ],
+        "obstacles": [
+            (700, GROUND_LEVEL),
+            (1300, GROUND_LEVEL),
+            (1600, GROUND_LEVEL),
+        ],
+        "dragon_start": (1800, GROUND_LEVEL),
+        "exit_pos": (1950, GROUND_LEVEL),
+        "level_width": 2000,
+    },
+    # Level 3 (Verticality, more obstacles)
+     {
+        "platforms": [
+            (0, GROUND_LEVEL, 2200, 40),
+            (100, SCREEN_HEIGHT - 100, 80, 20),
+            (300, SCREEN_HEIGHT - 180, 100, 20),
+            (500, SCREEN_HEIGHT - 260, 120, 20), # Higher platforms
+            (750, SCREEN_HEIGHT - 150, 100, 20),
+            (950, SCREEN_HEIGHT - 320, 80, 20),
+            (1200, SCREEN_HEIGHT - 220, 150, 20),
+            (1450, SCREEN_HEIGHT - 120, 100, 20),
+            (1700, SCREEN_HEIGHT - 300, 100, 20),
+            (1950, SCREEN_HEIGHT - 200, 100, 20),
+        ],
+        "treasures": [
+            (150, SCREEN_HEIGHT - 100),
+            (350, SCREEN_HEIGHT - 180),
+            (560, SCREEN_HEIGHT - 260),
+            (800, SCREEN_HEIGHT - 150),
+            (1000, SCREEN_HEIGHT - 320),
+            (1275, SCREEN_HEIGHT - 220),
+            (1500, SCREEN_HEIGHT - 120),
+             (50, GROUND_LEVEL),
+            (1750, SCREEN_HEIGHT - 300),
+            (2000, SCREEN_HEIGHT - 200),
+             (1050, GROUND_LEVEL),
+             (1600, GROUND_LEVEL),
+        ],
+        "obstacles": [
+            (250, GROUND_LEVEL),
+            (650, SCREEN_HEIGHT - 180), # Obstacle on platform
+            (900, GROUND_LEVEL),
+            (1400, GROUND_LEVEL),
+             (1850, GROUND_LEVEL),
+        ],
+        "dragon_start": (1900, SCREEN_HEIGHT - 300), # Dragon starts higher
+        "exit_pos": (2150, GROUND_LEVEL),
+        "level_width": 2200,
+    },
+    # Level 4 (Narrow passages, dragon guarding exit more closely)
+     {
+        "platforms": [
+             # Ground sections
+             (0, GROUND_LEVEL, 400, 40),
+             (600, GROUND_LEVEL, 500, 40),
+             (1300, GROUND_LEVEL, 1100, 40),
+             # Mid platforms - create bottlenecks
+             (450, SCREEN_HEIGHT - 150, 100, 20), # Jump over gap
+             (500, SCREEN_HEIGHT - 250, 80, 20), # Higher jump
+             (700, SCREEN_HEIGHT - 180, 150, 20),
+             (900, SCREEN_HEIGHT - 300, 100, 20),
+             (1150, SCREEN_HEIGHT - 220, 100, 20), # Jump over gap
+             (1400, SCREEN_HEIGHT - 160, 120, 20),
+             (1650, SCREEN_HEIGHT - 280, 80, 20),
+             (1900, SCREEN_HEIGHT - 120, 100, 20),
+             (2100, SCREEN_HEIGHT - 200, 100, 20), # Near exit
+        ],
+        "treasures": [
+             (50, GROUND_LEVEL),
+             (500, SCREEN_HEIGHT - 150),
+             (550, SCREEN_HEIGHT - 250),
+             (750, SCREEN_HEIGHT - 180),
+             (950, SCREEN_HEIGHT - 300),
+             (1200, SCREEN_HEIGHT - 220),
+             (800, GROUND_LEVEL),
+             (1450, SCREEN_HEIGHT - 160),
+             (1700, SCREEN_HEIGHT - 280),
+             (1950, SCREEN_HEIGHT - 120),
+             (2150, SCREEN_HEIGHT - 200),
+             (1500, GROUND_LEVEL),
+             (2350, GROUND_LEVEL), # Treasure past exit start
+        ],
+        "obstacles": [
+             (300, GROUND_LEVEL),
+             (800, GROUND_LEVEL),
+             (1050, GROUND_LEVEL), # Obstacle before gap
+             (1550, GROUND_LEVEL),
+             (1800, SCREEN_HEIGHT - 160), # Obstacle on platform
+             (2200, GROUND_LEVEL), # Near exit
+        ],
+        "dragon_start": (2000, GROUND_LEVEL), # Closer to the later part
+        "exit_pos": (2350, GROUND_LEVEL),
+        "level_width": 2400,
+    },
+    # Level 5 (Longer level, dragon patrols?) - Let's keep dragon simple for now
+     {
+        "platforms": [
+             (0, GROUND_LEVEL, 2600, 40),
+             # Series of small, spaced platforms
+             (150, SCREEN_HEIGHT - 100, 70, 20),
+             (350, SCREEN_HEIGHT - 150, 70, 20),
+             (550, SCREEN_HEIGHT - 200, 70, 20),
+             (750, SCREEN_HEIGHT - 120, 70, 20),
+             (950, SCREEN_HEIGHT - 250, 70, 20),
+             (1150, SCREEN_HEIGHT - 180, 70, 20),
+             # Larger central platform area
+             (1300, SCREEN_HEIGHT - 300, 200, 20),
+             (1550, SCREEN_HEIGHT - 250, 150, 20),
+             # More small platforms
+             (1750, SCREEN_HEIGHT - 150, 70, 20),
+             (1950, SCREEN_HEIGHT - 280, 70, 20),
+             (2150, SCREEN_HEIGHT - 100, 70, 20),
+             (2350, SCREEN_HEIGHT - 220, 70, 20),
+        ],
+        "treasures": [
+             (185, SCREEN_HEIGHT - 100), (385, SCREEN_HEIGHT - 150),
+             (585, SCREEN_HEIGHT - 200), (785, SCREEN_HEIGHT - 120),
+             (985, SCREEN_HEIGHT - 250), (1185, SCREEN_HEIGHT - 180),
+             (1400, SCREEN_HEIGHT - 300), (1625, SCREEN_HEIGHT - 250),
+             (1785, SCREEN_HEIGHT - 150), (1985, SCREEN_HEIGHT - 280),
+             (2185, SCREEN_HEIGHT - 100), (2385, SCREEN_HEIGHT - 220),
+             (50, GROUND_LEVEL), (1000, GROUND_LEVEL), (2000, GROUND_LEVEL),
+        ],
+        "obstacles": [
+             (450, GROUND_LEVEL),
+             (900, GROUND_LEVEL),
+             (1450, SCREEN_HEIGHT - 300), # Obstacle on high platform
+             (1700, GROUND_LEVEL),
+             (2100, GROUND_LEVEL),
+             (2450, GROUND_LEVEL),
+        ],
+        "dragon_start": (2200, GROUND_LEVEL),
+        "exit_pos": (2550, GROUND_LEVEL),
+        "level_width": 2600,
+    },
+    # Level 6 (Maze-like platforms, requires careful jumping)
+    {
+        "platforms": [
+            (0, GROUND_LEVEL, 200, 40),
+            (300, GROUND_LEVEL, 300, 40),
+            (700, GROUND_LEVEL, 400, 40),
+            (1200, GROUND_LEVEL, 300, 40),
+            (1600, GROUND_LEVEL, 1200, 40),
+            # Ascending section
+            (100, SCREEN_HEIGHT - 100, 80, 20),
+            (250, SCREEN_HEIGHT - 180, 80, 20),
+             (150, SCREEN_HEIGHT - 260, 80, 20), # Step back
+             (300, SCREEN_HEIGHT - 340, 80, 20),
+             # Mid-air section
+             (500, SCREEN_HEIGHT - 250, 100, 20),
+             (650, SCREEN_HEIGHT - 180, 100, 20),
+             (800, SCREEN_HEIGHT - 280, 100, 20),
+             (950, SCREEN_HEIGHT - 210, 100, 20),
+             # Descending section
+             (1100, SCREEN_HEIGHT - 300, 80, 20),
+             (1250, SCREEN_HEIGHT - 200, 80, 20),
+             (1400, SCREEN_HEIGHT - 120, 80, 20),
+             # High path near dragon
+             (1700, SCREEN_HEIGHT - 350, 150, 20),
+             (1900, SCREEN_HEIGHT - 280, 100, 20),
+             (2100, SCREEN_HEIGHT - 320, 150, 20),
+             (2400, SCREEN_HEIGHT - 250, 100, 20),
+        ],
+        "treasures": [
+            (140, SCREEN_HEIGHT - 100), (290, SCREEN_HEIGHT - 180),
+            (190, SCREEN_HEIGHT - 260), (340, SCREEN_HEIGHT - 340),
+            (550, SCREEN_HEIGHT - 250), (700, SCREEN_HEIGHT - 180),
+            (850, SCREEN_HEIGHT - 280), (1000, SCREEN_HEIGHT - 210),
+            (1140, SCREEN_HEIGHT - 300), (1290, SCREEN_HEIGHT - 200),
+            (1440, SCREEN_HEIGHT - 120), (1775, SCREEN_HEIGHT - 350),
+            (1950, SCREEN_HEIGHT - 280), (2175, SCREEN_HEIGHT - 320),
+            (2450, SCREEN_HEIGHT - 250),
+             (50, GROUND_LEVEL), (800, GROUND_LEVEL), (1300, GROUND_LEVEL), (2750, GROUND_LEVEL)
+        ],
+        "obstacles": [
+            (400, GROUND_LEVEL),
+            (600, SCREEN_HEIGHT - 180), # Obstacle on platform
+            (1050, GROUND_LEVEL),
+             (1300, SCREEN_HEIGHT - 200), # Obstacle on platform
+             (1650, GROUND_LEVEL),
+             (2000, GROUND_LEVEL),
+             (2300, SCREEN_HEIGHT - 320), # High obstacle
+             (2600, GROUND_LEVEL),
+        ],
+        "dragon_start": (2500, SCREEN_HEIGHT - 350), # High up
+        "exit_pos": (2750, GROUND_LEVEL),
+        "level_width": 2800,
+    },
+    # Level 7 (Requires dropping rocks strategically?)
+     {
+        "platforms": [
+             (0, GROUND_LEVEL, 2800, 40),
+             # Section requiring distraction?
+             (200, SCREEN_HEIGHT - 100, 300, 20), # Platform above dragon start?
+             (600, SCREEN_HEIGHT - 180, 100, 20),
+             (800, SCREEN_HEIGHT - 250, 150, 20),
+             (1100, SCREEN_HEIGHT - 150, 100, 20),
+             # Raised section with obstacles
+             (1400, SCREEN_HEIGHT - 280, 200, 20),
+             (1700, SCREEN_HEIGHT - 350, 150, 20), # High point
+             (2000, SCREEN_HEIGHT - 260, 100, 20),
+             # Final stretch
+             (2300, SCREEN_HEIGHT - 120, 150, 20),
+             (2550, SCREEN_HEIGHT - 200, 100, 20),
+        ],
+        "treasures": [
+             (350, SCREEN_HEIGHT - 100), (650, SCREEN_HEIGHT - 180),
+             (875, SCREEN_HEIGHT - 250), (1150, SCREEN_HEIGHT - 150),
+             (1500, SCREEN_HEIGHT - 280), (1775, SCREEN_HEIGHT - 350),
+             (2050, SCREEN_HEIGHT - 260), (2375, SCREEN_HEIGHT - 120),
+             (2600, SCREEN_HEIGHT - 200),
+             (100, GROUND_LEVEL), (1000, GROUND_LEVEL), (1900, GROUND_LEVEL), (2700, GROUND_LEVEL)
+        ],
+        "obstacles": [
+             (500, GROUND_LEVEL), # Hiding spot before dragon?
+             (750, GROUND_LEVEL),
+             (1200, GROUND_LEVEL),
+             (1500, SCREEN_HEIGHT - 280), # Obstacle on platform
+             (1650, SCREEN_HEIGHT - 280), # Double obstacle
+             (2150, GROUND_LEVEL),
+             (2450, GROUND_LEVEL), # Obstacle near end
+        ],
+        "dragon_start": (950, GROUND_LEVEL), # Dragon starts early, blocking path
+        "exit_pos": (2750, GROUND_LEVEL),
+        "level_width": 2800,
+    },
+     # Level 8 (More complex fireball dodging sections)
+     {
+         "platforms": [
+             (0, GROUND_LEVEL, 3000, 40),
+             # Open area for dodging
+             (100, SCREEN_HEIGHT - 100, 100, 20),
+             (300, SCREEN_HEIGHT - 150, 100, 20),
+             (500, SCREEN_HEIGHT - 100, 100, 20),
+             (700, SCREEN_HEIGHT - 200, 200, 20), # Wider platform
+             # Narrow ledges under dragon
+             (1000, SCREEN_HEIGHT - 300, 80, 20),
+             (1150, SCREEN_HEIGHT - 320, 80, 20),
+             (1300, SCREEN_HEIGHT - 340, 80, 20),
+             # Upward climb
+             (1500, SCREEN_HEIGHT - 250, 100, 20),
+             (1700, SCREEN_HEIGHT - 350, 100, 20), # High platform
+             (1900, SCREEN_HEIGHT - 280, 100, 20),
+             # Final platforms
+             (2200, SCREEN_HEIGHT - 180, 150, 20),
+             (2500, SCREEN_HEIGHT - 240, 100, 20),
+             (2800, SCREEN_HEIGHT - 150, 100, 20),
+         ],
+         "treasures": [
+             (150, SCREEN_HEIGHT - 100), (350, SCREEN_HEIGHT - 150),
+             (550, SCREEN_HEIGHT - 100), (800, SCREEN_HEIGHT - 200),
+             (1040, SCREEN_HEIGHT - 300), (1190, SCREEN_HEIGHT - 320),
+             (1340, SCREEN_HEIGHT - 340), (1550, SCREEN_HEIGHT - 250),
+             (1750, SCREEN_HEIGHT - 350), (1950, SCREEN_HEIGHT - 280),
+             (2275, SCREEN_HEIGHT - 180), (2550, SCREEN_HEIGHT - 240),
+             (2850, SCREEN_HEIGHT - 150),
+             (400, GROUND_LEVEL), (1400, GROUND_LEVEL), (2100, GROUND_LEVEL), (2950, GROUND_LEVEL)
+         ],
+         "obstacles": [
+             (600, GROUND_LEVEL),
+             (900, SCREEN_HEIGHT - 200), # Obstacle on platform
+             (1600, GROUND_LEVEL),
+             (1800, SCREEN_HEIGHT - 350), # High obstacle
+             (2400, GROUND_LEVEL),
+             (2700, SCREEN_HEIGHT - 180), # Obstacle near end
+         ],
+         "dragon_start": (1100, SCREEN_HEIGHT - 150), # Dragon positioned over narrow ledges
+         "exit_pos": (2950, GROUND_LEVEL),
+         "level_width": 3000,
+     },
+    # Level 9 (Very high platforms, risk of falling)
+     {
+        "platforms": [
+             # Minimal ground
+             (0, GROUND_LEVEL, 100, 40),
+             (2900, GROUND_LEVEL, 100, 40),
+             # Series of high, small platforms
+             (200, SCREEN_HEIGHT - 150, 60, 20),
+             (400, SCREEN_HEIGHT - 250, 60, 20),
+             (600, SCREEN_HEIGHT - 350, 60, 20), # Very high
+             (800, SCREEN_HEIGHT - 280, 60, 20),
+             (1000, SCREEN_HEIGHT - 400, 60, 20), # Extremely high
+             (1200, SCREEN_HEIGHT - 320, 60, 20),
+             # Central structure
+             (1400, SCREEN_HEIGHT - 200, 150, 20),
+             (1600, SCREEN_HEIGHT - 300, 100, 20),
+             (1800, SCREEN_HEIGHT - 400, 80, 20), # Peak
+             (2000, SCREEN_HEIGHT - 300, 100, 20),
+             (2200, SCREEN_HEIGHT - 200, 150, 20),
+             # Descent
+             (2400, SCREEN_HEIGHT - 350, 60, 20),
+             (2600, SCREEN_HEIGHT - 250, 60, 20),
+             (2800, SCREEN_HEIGHT - 150, 60, 20),
+        ],
+        "treasures": [
+             (230, SCREEN_HEIGHT - 150), (430, SCREEN_HEIGHT - 250),
+             (630, SCREEN_HEIGHT - 350), (830, SCREEN_HEIGHT - 280),
+             (1030, SCREEN_HEIGHT - 400), (1230, SCREEN_HEIGHT - 320),
+             (1475, SCREEN_HEIGHT - 200), (1650, SCREEN_HEIGHT - 300),
+             (1840, SCREEN_HEIGHT - 400), (2050, SCREEN_HEIGHT - 300),
+             (2275, SCREEN_HEIGHT - 200), (2430, SCREEN_HEIGHT - 350),
+             (2630, SCREEN_HEIGHT - 250), (2830, SCREEN_HEIGHT - 150),
+             # Only one ground treasure at start
+             (50, GROUND_LEVEL),
+        ],
+        "obstacles": [
+             # Obstacles mostly on platforms
+             (500, SCREEN_HEIGHT - 250),
+             (900, SCREEN_HEIGHT - 280),
+             (1500, SCREEN_HEIGHT - 200),
+             (1700, SCREEN_HEIGHT - 300),
+             (2100, SCREEN_HEIGHT - 300),
+             (2500, SCREEN_HEIGHT - 350),
+        ],
+        "dragon_start": (1700, SCREEN_HEIGHT - 150), # Mid-level, near peak
+        "exit_pos": (2950, GROUND_LEVEL),
+        "level_width": 3000,
+    },
+     # Level 10 (Final challenge: long, complex, dragon near exit)
+     {
+        "platforms": [
+             (0, GROUND_LEVEL, 3500, 40), # Very long ground
+             # Early climb
+             (150, SCREEN_HEIGHT - 100, 100, 20),
+             (350, SCREEN_HEIGHT - 200, 100, 20),
+             (550, SCREEN_HEIGHT - 300, 100, 20),
+             # Mid-section with gaps and obstacles
+             (800, SCREEN_HEIGHT - 150, 150, 20),
+             (1100, SCREEN_HEIGHT - 250, 100, 20),
+             (1300, SCREEN_HEIGHT - 100, 80, 20), # Drop down
+             (1500, SCREEN_HEIGHT - 350, 120, 20), # High jump
+             (1750, SCREEN_HEIGHT - 220, 100, 20),
+             # High path near dragon's zone
+             (2000, SCREEN_HEIGHT - 400, 200, 20),
+             (2300, SCREEN_HEIGHT - 300, 150, 20),
+             (2550, SCREEN_HEIGHT - 420, 100, 20), # Very high peak
+             (2750, SCREEN_HEIGHT - 350, 150, 20),
+             # Descent to exit
+             (3000, SCREEN_HEIGHT - 200, 100, 20),
+             (3200, SCREEN_HEIGHT - 120, 100, 20),
+        ],
+        "treasures": [
+             (200, SCREEN_HEIGHT - 100), (400, SCREEN_HEIGHT - 200),
+             (600, SCREEN_HEIGHT - 300), (875, SCREEN_HEIGHT - 150),
+             (1150, SCREEN_HEIGHT - 250), (1340, SCREEN_HEIGHT - 100),
+             (1560, SCREEN_HEIGHT - 350), (1800, SCREEN_HEIGHT - 220),
+             (2100, SCREEN_HEIGHT - 400), (2375, SCREEN_HEIGHT - 300),
+             (2600, SCREEN_HEIGHT - 420), (2825, SCREEN_HEIGHT - 350),
+             (3050, SCREEN_HEIGHT - 200), (3250, SCREEN_HEIGHT - 120),
+             # Lots of ground treasures too
+             (50, GROUND_LEVEL), (1000, GROUND_LEVEL), (1600, GROUND_LEVEL),
+             (2200, GROUND_LEVEL), (2900, GROUND_LEVEL), (3450, GROUND_LEVEL),
+        ],
+        "obstacles": [
+             (450, GROUND_LEVEL),
+             (700, SCREEN_HEIGHT - 150),
+             (1200, GROUND_LEVEL),
+             (1400, SCREEN_HEIGHT - 100),
+             (1650, SCREEN_HEIGHT - 350),
+             (1900, GROUND_LEVEL),
+             (2100, SCREEN_HEIGHT - 400), # Obstacles high up
+             (2450, SCREEN_HEIGHT - 300),
+             (2700, GROUND_LEVEL),
+             (2950, SCREEN_HEIGHT - 200),
+             (3150, GROUND_LEVEL),
+             (3350, GROUND_LEVEL), # Obstacle right before exit
+        ],
+        "dragon_start": (3100, GROUND_LEVEL), # Dragon guarding the exit
+        "exit_pos": (3450, GROUND_LEVEL),
+        "level_width": 3500,
+    },
+]
 
 # --- Asset Loading Function ---
 def load_image(filename, size=None):
@@ -412,21 +838,24 @@ class DroppedRock(pygame.sprite.Sprite):
             self.pos.y += self.vel_y
             self.rect.centery = self.pos.y
 
+            landed_this_frame = False
             # Check for landing on a platform or ground
             if self.rect.bottom >= GROUND_LEVEL:
                 self.rect.bottom = GROUND_LEVEL
-                self.landed = True
-                self.vel_y = 0
-                self.land_pos = self.rect.midbottom
+                landed_this_frame = True
             else:
                  # Check platform collision
-                 # Note: This collision check is basic. It assumes rocks fall straight down.
                  hit_platforms = pygame.sprite.spritecollide(self, self.game.platforms, False)
                  if hit_platforms:
                      self.rect.bottom = hit_platforms[0].rect.top
-                     self.landed = True
-                     self.vel_y = 0
-                     self.land_pos = self.rect.midbottom
+                     landed_this_frame = True
+
+            if landed_this_frame:
+                 self.landed = True
+                 self.vel_y = 0
+                 # Convert tuple to Vector2
+                 self.land_pos = pygame.math.Vector2(self.rect.midbottom)
+                 self.game.newly_landed_rocks.append(self) # Add to game list
 
             # Remove if it goes off bottom of screen somehow
             if self.rect.top > SCREEN_HEIGHT:
@@ -460,14 +889,14 @@ class Game:
         self.clock = pygame.time.Clock()
         self.running = True
         self.font_name = pygame.font.match_font('arial') # Find a default font
-        self.state = "start" # states: start, playing, game_over
-        self.score = 0
+        self.state = "start" # states: start, playing, level_complete, game_over_lose, game_won_all
+        self.total_score = 0 # Score across all levels
+        self.current_level_index = 0
         self.world_shift = 0
-        self.level_width = 2000 # Width of the entire level
-
-        # Define the bounds of the game world
-        self.world_rect = pygame.Rect(0, 0, self.level_width, SCREEN_HEIGHT)
-
+        # level_width and world_rect will be set in new()
+        self.level_width = 0
+        self.world_rect = None # Will be set based on level width
+        self.newly_landed_rocks = [] # Track rocks landing this frame
 
         self.load_data()
 
@@ -485,10 +914,20 @@ class Game:
         self.background_rect = self.background.get_rect()
 
 
-    def new(self):
-        """Start a new game"""
-        self.score = 0
+    def new(self, level_index):
+        """Start a new game or level"""
+        if level_index >= len(LEVELS):
+            self.state = "game_won_all" # Finished all levels
+            return # Don't proceed with level setup
+
+        self.current_level_index = level_index
+        self.level_data = LEVELS[level_index]
+        self.level_width = self.level_data["level_width"]
+        self.world_rect = pygame.Rect(0, 0, self.level_width, SCREEN_HEIGHT)
+        self.score = 0 # Reset score for the new level
         self.world_shift = 0
+        self.newly_landed_rocks.clear() # Clear landed rocks for the new level
+
         # Sprite groups
         self.all_sprites = pygame.sprite.Group()
         self.platforms = pygame.sprite.Group()
@@ -502,62 +941,42 @@ class Game:
         self.player = Player(self)
         self.all_sprites.add(self.player)
 
+        # Load level elements from self.level_data
+        # Platforms (including the ground implicitly if defined)
+        for p_data in self.level_data["platforms"]:
+            platform = Platform(*p_data)
+            self.all_sprites.add(platform)
+            self.platforms.add(platform)
+
+        # Treasures
+        for t_pos in self.level_data["treasures"]:
+            treasure = Treasure(*t_pos)
+            self.all_sprites.add(treasure)
+            self.treasures.add(treasure)
+
+        # Obstacles
+        for o_pos in self.level_data["obstacles"]:
+            obstacle = Obstacle(*o_pos)
+            self.all_sprites.add(obstacle)
+            self.obstacles.add(obstacle)
+            self.platforms.add(obstacle) # Treat obstacles as platforms for collision
+
         # Create Dragon
-        # Position dragon further into the level
-        self.dragon = Dragon(self, self.level_width * 0.7, GROUND_LEVEL)
+        dragon_pos = self.level_data["dragon_start"]
+        self.dragon = Dragon(self, *dragon_pos)
         self.all_sprites.add(self.dragon)
         self.enemies.add(self.dragon)
 
-        # Define level layout (platforms, treasures, obstacles, exit)
-        # Platform format: (x, y, width, height)
-        # Treasure format: (x, y_bottom) - places bottom center at x, y
-        # Obstacle format: (x, y_bottom)
-        # Exit format: (x, y_bottom)
-
-        # Ground platform spanning the level width
-        ground = Platform(0, GROUND_LEVEL, self.level_width, 40)
-        self.all_sprites.add(ground)
-        self.platforms.add(ground)
-
-        # Example level elements:
-        level_elements = [
-            # Platforms
-            Platform(200, SCREEN_HEIGHT - 150, 150, 20),
-            Platform(500, SCREEN_HEIGHT - 250, 100, 20),
-            Platform(750, SCREEN_HEIGHT - 180, 120, 20),
-            Platform(1000, SCREEN_HEIGHT - 300, 150, 20),
-            Platform(1300, SCREEN_HEIGHT - 200, 100, 20),
-            # Treasures
-            Treasure(250, SCREEN_HEIGHT - 150), # On first platform
-            Treasure(550, SCREEN_HEIGHT - 250), # On second platform
-            Treasure(150, GROUND_LEVEL),
-            Treasure(900, GROUND_LEVEL),
-            Treasure(1100, SCREEN_HEIGHT - 300), # On fourth platform
-            Treasure(1400, GROUND_LEVEL),
-            # Obstacles (rocks to hide behind)
-            Obstacle(400, GROUND_LEVEL),
-            Obstacle(1200, GROUND_LEVEL),
-            # Exit
-            Exit(self.level_width - 100, GROUND_LEVEL)
-        ]
-
-        for element in level_elements:
-            self.all_sprites.add(element)
-            if isinstance(element, Platform):
-                self.platforms.add(element)
-            elif isinstance(element, Treasure):
-                self.treasures.add(element)
-            elif isinstance(element, Obstacle):
-                self.obstacles.add(element)
-                self.platforms.add(element) # Treat obstacles as platforms for collision
-            elif isinstance(element, Exit):
-                self.exit_sprite = element # Store ref to exit
+        # Create Exit
+        exit_pos = self.level_data["exit_pos"]
+        self.exit_sprite = Exit(*exit_pos)
+        self.all_sprites.add(self.exit_sprite)
 
         self.state = "playing"
         self.run()
 
     def run(self):
-        """Game Loop"""
+        """Game Loop for a single level"""
         self.playing = True
         while self.playing:
             self.clock.tick(FPS)
@@ -571,41 +990,57 @@ class Game:
 
         # --- Scrolling ---
         scroll = 0
-        
         # Calculate potential shift based on player position and screen thresholds
         player_screen_x = self.player.rect.centerx + self.world_shift
 
         # If player moves past the right scroll threshold towards the right
         if player_screen_x > SCREEN_WIDTH - SCROLL_THRESH and self.player.vel.x > 0:
-            scroll = -int(self.player.vel.x) # Shift world left
+            # Calculate how much the player has moved past the threshold
+            scroll_amount = player_screen_x - (SCREEN_WIDTH - SCROLL_THRESH)
+            # Scroll the world left, but don't exceed player's speed
+            scroll = -min(int(abs(self.player.vel.x)), int(scroll_amount))
+
 
         # If player moves past the left scroll threshold towards the left
         elif player_screen_x < SCROLL_THRESH and self.player.vel.x < 0:
-            scroll = -int(self.player.vel.x) # Shift world right
+             # Calculate how much the player has moved past the threshold
+            scroll_amount = SCROLL_THRESH - player_screen_x
+            # Scroll the world right, but don't exceed player's speed
+            scroll = min(int(abs(self.player.vel.x)), int(scroll_amount))
+
 
         # Clamp the world_shift to the level boundaries
         potential_new_shift = self.world_shift + scroll
-        max_left_shift = 0
-        max_right_shift = -(self.level_width - SCREEN_WIDTH)
+        max_left_shift = 0 # Screen aligned with left edge of level
+        max_right_shift = -(self.level_width - SCREEN_WIDTH) # Screen aligned with right edge
 
-        # Apply clamping
-        self.world_shift = max(max_right_shift, min(max_left_shift, potential_new_shift))
+        # Prevent scrolling beyond level boundaries
+        if self.level_width <= SCREEN_WIDTH:
+            self.world_shift = 0 # Don't scroll if level fits on screen
+        else:
+             self.world_shift = max(max_right_shift, min(max_left_shift, potential_new_shift))
 
-        # Recalculate the actual scroll applied after clamping (for sprite shifting)
-        actual_scroll = self.world_shift - (potential_new_shift - scroll) 
+        # Calculate the actual scroll applied after clamping (for sprite shifting)
+        # This ensures sprites don't shift if the scroll was clamped
+        actual_scroll = self.world_shift - (potential_new_shift - scroll)
 
         # Apply the *actual* scroll to all sprites EXCEPT the player
         if actual_scroll != 0:
             for sprite in self.all_sprites:
                 if sprite != self.player:
+                    # Update rect position directly
                     sprite.rect.x += actual_scroll
-                    # Need to update position vectors for sprites that use them (Dragon, Fireball)
-                    if hasattr(sprite, 'pos'):
-                        sprite.pos.x += actual_scroll
+                    # Also update vector positions if they exist (Dragon, Fireball, DroppedRock)
+                    if hasattr(sprite, 'pos') and sprite.pos is not None:
+                        try:
+                            sprite.pos.x += actual_scroll
+                        except AttributeError:
+                            # Handle cases where pos might not be a Vector2 (e.g., None temporarily)
+                            pass
 
-        # Player boundary checks are now handled entirely within Player.update relative to level_width
-        # No need for extra boundary checks or player position adjustments here.
-        
+
+        # Player boundary checks are handled within Player.update relative to level_width
+
         # --- Game Logic ---
         # Player collects treasures
         treasure_hits = pygame.sprite.spritecollide(self.player, self.treasures, True) # True removes the treasure
@@ -616,56 +1051,64 @@ class Game:
             if self.dragon.state == "sleeping":
                  dist_to_dragon = self.player.pos.distance_to(self.dragon.pos)
                  # Make noise more likely to wake dragon if closer
-                 wake_chance = (DRAGON_WAKE_RANGE * 1.5 - dist_to_dragon) / (DRAGON_WAKE_RANGE * 1.5)
-                 if random.random() < wake_chance * 0.5: # 50% chance based on proximity
-                      print("Treasure collection noise woke the dragon!")
-                      self.dragon.wake_up()
+                 # Ensure DRAGON_WAKE_RANGE is not zero to avoid division error
+                 if DRAGON_WAKE_RANGE > 0:
+                    wake_chance = max(0, (DRAGON_WAKE_RANGE * 1.5 - dist_to_dragon) / (DRAGON_WAKE_RANGE * 1.5))
+                    if random.random() < wake_chance * 0.5: # 50% chance based on proximity
+                        print("Treasure collection noise woke the dragon!")
+                        self.dragon.wake_up()
 
         # Player hits exit
         if pygame.sprite.collide_rect(self.player, self.exit_sprite):
-            print("You Win!")
-            self.playing = False
-            self.state = "game_over_win"
+            print(f"Level {self.current_level_index + 1} Complete!")
+            self.total_score += self.score # Add level score to total
+            self.current_level_index += 1
+            self.playing = False # Exit current level loop
+            if self.current_level_index >= len(LEVELS):
+                self.state = "game_won_all" # Finished last level
+            else:
+                self.state = "level_complete" # Proceed to next level
 
         # Player hits dragon or fireballs
         enemy_hits = pygame.sprite.spritecollide(self.player, self.enemies, False, pygame.sprite.collide_rect_ratio(0.8)) # Smaller hitbox
         fireball_hits = pygame.sprite.spritecollide(self.player, self.fireballs, True, pygame.sprite.collide_rect_ratio(0.8)) # Fireballs disappear on hit
 
         if enemy_hits or fireball_hits:
-            if self.dragon.state != "sleeping": # Only lose if dragon is awake
+            # Only lose if dragon is awake OR if hit by a fireball (which only exists if dragon is awake/shooting)
+            if self.dragon.state != "sleeping" or fireball_hits:
                 print("Game Over!")
                 self.hit_sound.play()
-                self.playing = False
+                self.playing = False # Exit current level loop
                 self.state = "game_over_lose"
 
 
-        # Dropped rocks hit dragon (distraction)
+        # Check for distraction by newly landed rocks
         if self.dragon.state != "sleeping":
-             rock_hits = pygame.sprite.spritecollide(self.dragon, self.dropped_rocks, False) # Don't kill rock yet
-             for rock in rock_hits:
-                  if rock.landed: # Only landed rocks distract
-                       self.dragon.get_distracted(rock.land_pos)
-                       rock.kill() # Remove the rock once it hits
+             for rock in self.newly_landed_rocks:
+                  if rock.land_pos:
+                       dist_to_dragon = rock.land_pos.distance_to(self.dragon.pos)
+                       if dist_to_dragon < LAND_SOUND_RADIUS:
+                            self.dragon.get_distracted(rock.land_pos)
+                            rock.kill() # Remove the rock once it distracts
 
-        # Player hits obstacles (stop movement) - Handled partly in Player update, could refine here
-        obstacle_hits = pygame.sprite.spritecollide(self.player, self.obstacles, False)
-        if obstacle_hits:
-            # Basic horizontal collision response
-            if self.player.vel.x > 0: # Moving right
-                self.player.rect.right = obstacle_hits[0].rect.left
-            elif self.player.vel.x < 0: # Moving left
-                self.player.rect.left = obstacle_hits[0].rect.right
-            self.player.pos.x = self.player.rect.centerx
-            self.player.vel.x = 0
+        # Clear the list after checking (do this once per frame)
+        self.newly_landed_rocks.clear()
 
-            # Basic vertical collision response (if falling onto obstacle)
-            if self.player.vel.y > 0 and self.player.rect.bottom > obstacle_hits[0].rect.top:
-                self.player.rect.bottom = obstacle_hits[0].rect.top + 1
-                self.player.pos.y = self.player.rect.bottom
-                self.player.vel.y = 0
-                self.player.on_ground = True # Can jump off obstacles
 
-        # Keep player and dragon within world bounds (redundant check, but safe)
+        # Player hits obstacles (stop movement) - Collision handled in Player update
+
+        # --- Remove off-screen fireballs/rocks ---
+        for fireball in self.fireballs:
+             # Use screen rect shifted by world_shift to check visibility
+             screen_bounds = self.screen.get_rect().move(-self.world_shift, 0)
+             if not screen_bounds.colliderect(fireball.rect):
+                  fireball.kill()
+        for rock in self.dropped_rocks:
+            if rock.rect.top > SCREEN_HEIGHT: # Or just check if below screen
+                 rock.kill()
+
+
+        # Keep player and dragon within world bounds (mostly handled in sprites, but good failsafe)
         if self.player.rect.left < 0: self.player.rect.left = 0; self.player.pos.x = self.player.rect.centerx
         if self.player.rect.right > self.level_width: self.player.rect.right = self.level_width; self.player.pos.x = self.player.rect.centerx
         if self.dragon.rect.left < 0: self.dragon.rect.left = 0; self.dragon.pos.x = self.dragon.rect.centerx
@@ -687,11 +1130,14 @@ class Game:
                         self.player.jump()
                     if event.key == pygame.K_SPACE:
                         self.player.drop_rock()
-                 elif self.state == "start" or self.state.startswith("game_over"):
-                     # Any key press starts a new game from start/game over screens
-                     if event.key != pygame.K_ESCAPE: # Allow ESC to quit always
-                          self.state = "playing" # Trigger new game start
-                          self.playing = False # End current loop (start/game over)
+                 # Allow restarting from game over / win screens
+                 elif self.state == "start" or self.state == "game_over_lose" or self.state == "game_won_all":
+                     if event.key != pygame.K_ESCAPE:
+                          # Reset for a completely new game
+                          self.current_level_index = 0
+                          self.total_score = 0
+                          self.state = "playing" # Trigger new game start in main loop
+                          self.playing = False # End current screen loop (start/game over)
 
                  if event.key == pygame.K_ESCAPE: # Global quit key
                       self.running = False
@@ -708,23 +1154,28 @@ class Game:
         for sprite in self.all_sprites:
             # Adjust draw position based on world_shift
             # Only draw sprites that are potentially visible on screen
-            # This is a basic visibility check
             screen_rect = self.screen.get_rect()
             sprite_screen_pos = sprite.rect.move(self.world_shift, 0)
             if screen_rect.colliderect(sprite_screen_pos):
                  self.screen.blit(sprite.image, sprite_screen_pos)
 
 
-        # Draw Score
-        self.draw_text(f"Treasures: {self.score}", 22, WHITE, SCREEN_WIDTH / 2, 15)
+        # Draw Score and Level Info
+        level_text = f"Level: {self.current_level_index + 1}/{len(LEVELS)}"
+        self.draw_text(level_text, 22, WHITE, 80, 15) # Top Left
+        self.draw_text(f"Treasures: {self.score}", 22, WHITE, SCREEN_WIDTH / 2, 15) # Top Middle (Level Score)
+        self.draw_text(f"Total: {self.total_score}", 22, WHITE, SCREEN_WIDTH - 80, 15) # Top Right (Total Score)
+
 
         # Draw Dragon State (for debugging/clarity)
         if self.dragon.state == "sleeping":
-            self.draw_text("Dragon: Zzzz", 18, WHITE, SCREEN_WIDTH - 100, 15)
+            self.draw_text("Dragon: Zzzz", 18, WHITE, SCREEN_WIDTH / 2, 45)
+        elif self.dragon.state == "waking":
+             self.draw_text("Dragon: Waking...", 18, YELLOW, SCREEN_WIDTH / 2, 45)
         elif self.dragon.state == "chasing":
-             self.draw_text("Dragon: AWAKE!", 18, RED, SCREEN_WIDTH - 100, 15)
+             self.draw_text("Dragon: AWAKE!", 18, RED, SCREEN_WIDTH / 2, 45)
         elif self.dragon.state == "distracted":
-              self.draw_text("Dragon: Distracted", 18, YELLOW, SCREEN_WIDTH - 100, 15)
+              self.draw_text("Dragon: Distracted", 18, YELLOW, SCREEN_WIDTH / 2, 45)
 
 
         # After drawing everything, flip the display
@@ -732,35 +1183,41 @@ class Game:
 
     def show_start_screen(self):
         """Display the start screen"""
+        self.current_level_index = 0 # Ensure starting from level 1
+        self.total_score = 0      # Ensure total score is reset
         self.screen.blit(self.background, self.background_rect) # Use game background
         self.draw_text("Dragon Cave Adventure!", 48, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 4)
         self.draw_text("Use ARROW keys to move, UP to jump", 22, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
         self.draw_text("SPACEBAR to drop a rock (distracts awake dragon)", 22, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 40)
-        self.draw_text("Collect treasures and reach the exit!", 22, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 80)
+        self.draw_text(f"Collect treasures and clear all {len(LEVELS)} levels!", 22, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 80)
         self.draw_text("Don't get too close to the sleeping dragon...", 22, YELLOW, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 120)
         self.draw_text("Press any key to start", 22, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT * 3 / 4)
         pygame.display.flip()
         self.wait_for_key()
+        self.state = "playing" # Set state to start the game loop
 
-    def show_game_over_screen(self, win):
-        """Display game over screen"""
+    def show_game_over_screen(self, status):
+        """Display game over or game won screen"""
         if not self.running: # Don't show if we quit during game over
              return
         self.screen.blit(self.background, self.background_rect) # Use game background
-        if win:
-            self.draw_text("YOU WIN!", 48, GREEN, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 4)
-            self.draw_text(f"You collected {self.score} treasures!", 22, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
-        else:
+
+        if status == "game_won_all":
+            self.draw_text("YOU CONQUERED THE CAVE!", 48, GREEN, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 4)
+            self.draw_text(f"You collected a total of {self.total_score} treasures!", 22, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+        elif status == "game_over_lose":
             self.draw_text("GAME OVER!", 48, RED, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 4)
             self.draw_text("The dragon got you!", 22, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
-        self.draw_text("Press any key to play again", 22, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT * 3 / 4)
+            self.draw_text(f"You reached Level {self.current_level_index + 1} with {self.total_score} total treasures.", 20, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 40)
+
+        self.draw_text("Press any key to play again (from Level 1)", 22, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT * 3 / 4)
         pygame.display.flip()
         self.wait_for_key()
 
     def wait_for_key(self):
         """Pause the game until a key is pressed"""
         waiting = True
-        while waiting:
+        while waiting and self.running: # Check self.running too
             self.clock.tick(FPS / 2) # Lower FPS while waiting
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -783,14 +1240,34 @@ class Game:
 
 # --- Main Execution ---
 g = Game()
-g.show_start_screen()
+g.show_start_screen() # Sets state to "playing" if user proceeds
+
 while g.running:
-    g.new() # Start a new game instance
-    if g.state == "game_over_win":
-        g.show_game_over_screen(win=True)
+    if g.state == "playing" or g.state == "level_complete":
+        # If starting after a game over/win, index/score are already reset by the logic below
+        g.new(g.current_level_index) # Start or continue level (calls run())
+        # run() loop finishes, state is now level_complete, game_over_lose, or game_won_all
+
+    # Handle transitions AFTER a level attempt finishes
+    if g.state == "game_won_all":
+        g.show_game_over_screen("game_won_all") # Displays screen and waits for key
+        if g.running: # If user didn't quit on the game over screen
+             # Reset for a new game
+             g.current_level_index = 0
+             g.total_score = 0
+             g.state = "playing" # Set state to start level 1 on next loop iteration
     elif g.state == "game_over_lose":
-         g.show_game_over_screen(win=False)
-    # If g.running is False after show_game_over_screen (due to ESC), loop will terminate
+         g.show_game_over_screen("game_over_lose") # Displays screen and waits for key
+         if g.running: # If user didn't quit on the game over screen
+              # Reset for a new game
+              g.current_level_index = 0
+              g.total_score = 0
+              g.state = "playing" # Set state to start level 1 on next loop iteration
+
+    # If state is "level_complete", the top 'if' condition will catch it
+    # on the next iteration and call g.new() with the incremented index.
+    # If g.running becomes False (e.g., ESC pressed during wait_for_key), the loop terminates.
+
 
 pygame.quit()
 
@@ -809,4 +1286,6 @@ pygame.quit()
 # - Implement a pause menu.
 # - Add particle effects (e.g., for fireballs, collecting gems).
 # - Adjust collision handling to prevent player from being reset to the bottom left.
+# - Add level transition screen (e.g., "Level X Complete!")
+# - Save high scores.
 # --- End Modifications --- 
