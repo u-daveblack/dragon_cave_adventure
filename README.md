@@ -13,7 +13,7 @@ Follow these instructions to install and run the application:
 
 1.  **Clone the repository (if you haven't already):**
     ```bash
-    git clone https://github.com/u-daveblack/dragon_cave_adventure/commits/main/
+    git clone https://github.com/u-daveblack/dragon_cave_adventure.git
     cd ./dragon_cave_adventure
     ```
 
