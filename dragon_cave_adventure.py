@@ -74,6 +74,13 @@ LAND_SOUND_RADIUS = 100 # How far away the dragon hears a rock land
 GROUND_LEVEL = SCREEN_HEIGHT - 40
 SCROLL_THRESH = SCREEN_WIDTH // 3 # How far player moves before screen scrolls
 
+# Lead Crystal properties
+LEAD_CRYSTAL_SIZE = (20, 20) # Same as regular treasure for now, can adjust
+LEAD_EFFECT_DURATION = 3000 # milliseconds (3 seconds)
+LEAD_SPEED_PENALTY_FACTOR = 0.6 # Player moves at 60% speed
+LEAD_JUMP_PENALTY_FACTOR = 0.7 # Player jumps at 70% height
+LEAD_GRAY = (100, 100, 110) # Fallback color for lead crystal
+
 # Asset paths (optional)
 ASSETS_FOLDER = "assets"
 
@@ -104,6 +111,10 @@ LEVELS = [
         "dragons_start": [(1600, GROUND_LEVEL)], # Start dragon further away
         "exit_pos": (1900, GROUND_LEVEL),
         "level_width": 2000,
+        "lead_crystals": [ # Example placement for level 1
+            (600, GROUND_LEVEL),
+            (800, SCREEN_HEIGHT - 180),
+        ]
     },
     # Level 2 (More gaps, slightly trickier platforms)
     {
@@ -138,6 +149,10 @@ LEVELS = [
         "dragons_start": [(1800, GROUND_LEVEL)],
         "exit_pos": (1950, GROUND_LEVEL),
         "level_width": 2000,
+        "lead_crystals": [
+            (450, GROUND_LEVEL), # Example for level 2
+            (1000, SCREEN_HEIGHT - 200) # Example for level 2
+        ]
     },
     # Level 3 (Verticality, more obstacles)
      {
@@ -177,6 +192,10 @@ LEVELS = [
         "dragons_start": [(1900, SCREEN_HEIGHT - 300)], # Dragon starts higher
         "exit_pos": (2150, GROUND_LEVEL),
         "level_width": 2200,
+        "lead_crystals": [
+            (400, SCREEN_HEIGHT - 180), # Example for level 3
+            (1100, GROUND_LEVEL)       # Example for level 3
+        ]
     },
     # Level 4 (Narrow passages, dragon guarding exit more closely)
      {
@@ -222,6 +241,10 @@ LEVELS = [
         "dragons_start": [(2000, GROUND_LEVEL)], # Closer to the later part
         "exit_pos": (2350, GROUND_LEVEL),
         "level_width": 2400,
+        "lead_crystals": [
+            (650, SCREEN_HEIGHT - 250), # Example for level 4
+            (1500, GROUND_LEVEL)       # Example for level 4
+        ]
     },
     # Level 5 (Longer level, two dragons)
      {
@@ -266,6 +289,11 @@ LEVELS = [
         ],
         "exit_pos": (2550, GROUND_LEVEL),
         "level_width": 2600,
+        "lead_crystals": [
+            (600, SCREEN_HEIGHT - 200), # Example for level 5
+            (1500, SCREEN_HEIGHT - 300),# Example for level 5
+            (2200, GROUND_LEVEL)       # Example for level 5
+        ]
     },
     # Level 6 (Maze-like platforms, two dragons)
     {
@@ -322,6 +350,11 @@ LEVELS = [
         ],
         "exit_pos": (2750, GROUND_LEVEL),
         "level_width": 2800,
+        "lead_crystals": [
+            (200, SCREEN_HEIGHT - 180), # Example for level 6
+            (1350, SCREEN_HEIGHT - 200),# Example for level 6
+            (2400, GROUND_LEVEL)       # Example for level 6
+        ]
     },
     # Level 7 (Requires dropping rocks strategically, two dragons)
      {
@@ -363,6 +396,10 @@ LEVELS = [
         ],
         "exit_pos": (2750, GROUND_LEVEL),
         "level_width": 2800,
+        "lead_crystals": [ # Example placement for level 7
+            (1300, SCREEN_HEIGHT - 280),
+            (2200, SCREEN_HEIGHT - 120),
+        ]
     },
      # Level 8 (More complex fireball dodging sections, two dragons)
      {
@@ -410,6 +447,10 @@ LEVELS = [
         ],
          "exit_pos": (2950, GROUND_LEVEL),
          "level_width": 3000,
+         "lead_crystals": [ # Example placement for level 8
+            (750, SCREEN_HEIGHT - 200),
+            (1250, SCREEN_HEIGHT - 300),
+        ]
      },
     # Level 9 (Very high platforms, risk of falling, two dragons)
      {
@@ -461,6 +502,10 @@ LEVELS = [
         ],
         "exit_pos": (2950, GROUND_LEVEL),
         "level_width": 3000,
+        "lead_crystals": [ # Example placement for level 9
+            (700, SCREEN_HEIGHT - 250),
+            (1650, SCREEN_HEIGHT - 300),
+        ]
     },
      # Level 10 (Final challenge: long, complex, THREE dragons near exit)
      {
@@ -518,6 +563,11 @@ LEVELS = [
         ],
         "exit_pos": (3450, GROUND_LEVEL),
         "level_width": 3500,
+        "lead_crystals": [ # Example placement for level 10
+            (1200, SCREEN_HEIGHT - 150),
+            (2050, SCREEN_HEIGHT - 400),
+            (2900, SCREEN_HEIGHT - 200),
+        ]
     },
 ]
 
@@ -568,6 +618,13 @@ class Player(pygame.sprite.Sprite):
         self.on_ground = False
         self.last_rock_drop = pygame.time.get_ticks()
         self.rock_cooldown = 1000 # Milliseconds
+        self.lead_effect_active = False
+        self.lead_effect_end_time = 0
+        self.original_player_acc = PLAYER_ACC # Store original value
+        self.original_player_jump_power = PLAYER_JUMP_POWER # Store original value
+        # Alpha for visual effect, ensure it's correctly initialized
+        if self.image: # Check if image was loaded
+            self.image.set_alpha(255)
 
     def jump(self):
         # Jump only if standing on a platform
@@ -575,7 +632,10 @@ class Player(pygame.sprite.Sprite):
         hits = pygame.sprite.spritecollide(self, self.game.platforms, False)
         self.rect.y -= 1 # Move back up
         if hits:
-            self.vel.y = -PLAYER_JUMP_POWER
+            effective_jump_power = self.original_player_jump_power
+            if self.lead_effect_active and pygame.time.get_ticks() < self.lead_effect_end_time:
+                effective_jump_power *= LEAD_JUMP_PENALTY_FACTOR
+            self.vel.y = -effective_jump_power
             self.game.jump_sound.play()
 
     def drop_rock(self):
@@ -586,6 +646,11 @@ class Player(pygame.sprite.Sprite):
             self.game.all_sprites.add(rock)
             self.game.dropped_rocks.add(rock)
             # Add a small visual/audio cue if needed
+
+    def apply_lead_effect(self):
+        self.lead_effect_active = True
+        self.lead_effect_end_time = pygame.time.get_ticks() + LEAD_EFFECT_DURATION
+        print("Player affected by lead!") # For debugging
 
     def update(self):
         # --- Physics Calculations ---
@@ -609,12 +674,34 @@ class Player(pygame.sprite.Sprite):
         # Equations of motion: update velocity
         self.vel += self.acc
 
-        # Limit horizontal velocity (optional, but can prevent excessive speed)
-        if abs(self.vel.x) > 7: # Increased limit slightly
-             self.vel.x = 7 * (1 if self.vel.x > 0 else -1)
+        # Limit horizontal velocity
+        max_h_speed = 7 # Original max speed
+        if self.lead_effect_active and pygame.time.get_ticks() < self.lead_effect_end_time:
+            max_h_speed *= LEAD_SPEED_PENALTY_FACTOR
+
+        if abs(self.vel.x) > max_h_speed:
+             self.vel.x = max_h_speed * (1 if self.vel.x > 0 else -1)
         # Prevent tiny drifting when stopping
         if abs(self.vel.x) < 0.1:
             self.vel.x = 0
+
+        # Apply lead effect visual cue and check duration
+        if self.lead_effect_active:
+            now = pygame.time.get_ticks()
+            if now < self.lead_effect_end_time:
+                # Visual cue: flashing
+                if self.image: # Check if image exists
+                    if (now // 150) % 2 == 0: # Flash faster
+                        self.image.set_alpha(120)
+                    else:
+                        self.image.set_alpha(255)
+            else:
+                self.lead_effect_active = False
+                if self.image: self.image.set_alpha(255) # Restore full opacity
+        else:
+            # Ensure alpha is normal if effect is not active (e.g., after loading a level)
+            if self.image and self.image.get_alpha() != 255:
+                 self.image.set_alpha(255)
 
         # --- Movement and Collision ---
         # Update horizontal position
@@ -836,6 +923,28 @@ class Platform(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+        self.dragon_roar_sound = load_sound("roar.wav")
+        self.hit_sound = load_sound("hit.wav")
+        # Load background - optional
+        self.background = load_image("cave_background.png", (SCREEN_WIDTH, SCREEN_HEIGHT))
+        if self.background is None:
+            self.background = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+            self.background.fill(DARK_GRAY) # Default dark background
+        self.background_rect = self.background.get_rect()
+        self.lead_sound = load_sound("poison_lead.wav")
+
+
+        # Load background music
+        try:
+            pygame.mixer.music.load(os.path.join(ASSETS_FOLDER, "background_track_1.mp3"))
+            pygame.mixer.music.set_volume(0.5) # Set volume to 50%
+        except pygame.error as e:
+            print(f"Cannot load background music: background_track_1.mp3 - {e}")
+
+    def update(self):
+        # Platforms are static, so this method can be empty or removed
+        # if it was unintentionally populated with Player physics.
+        pass # Ensure it does nothing if it was previously filled with player logic
 
 
 class Obstacle(pygame.sprite.Sprite):
@@ -913,6 +1022,20 @@ class Exit(pygame.sprite.Sprite):
         self.rect.bottom = y
 
 
+class LeadCrystal(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image_orig = load_image("poison_lead_treasure.png", LEAD_CRYSTAL_SIZE)
+        if self.image_orig is None:
+            self.image = pygame.Surface(LEAD_CRYSTAL_SIZE)
+            self.image.fill(LEAD_GRAY) # Fallback color
+        else:
+            self.image = self.image_orig.copy()
+        self.rect = self.image.get_rect()
+        self.rect.centerx = x
+        self.rect.bottom = y
+
+
 # --- Game Class ---
 
 class Game:
@@ -940,6 +1063,7 @@ class Game:
         self.big_treasure_sprite = None
         self.big_treasure_spawned = False
         self.total_treasures_in_level = 0
+        self.lead_crystals = pygame.sprite.Group()
 
     def load_data(self):
         """Load game assets"""
@@ -953,7 +1077,14 @@ class Game:
             self.background = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
             self.background.fill(DARK_GRAY) # Default dark background
         self.background_rect = self.background.get_rect()
+        self.lead_sound = load_sound("poison_lead.wav")
 
+        # Load background music
+        try:
+            pygame.mixer.music.load(os.path.join(ASSETS_FOLDER, "background_track_1.mp3"))
+            pygame.mixer.music.set_volume(0.5) # Set volume to 50%
+        except pygame.error as e:
+            print(f"Cannot load background music: background_track_1.mp3 - {e}")
 
     def new(self, level_index):
         """Start a new game or level"""
@@ -981,6 +1112,7 @@ class Game:
         self.dropped_rocks = pygame.sprite.Group()
         self.enemies = pygame.sprite.Group() # Group for things that hurt player
         self.dragons = pygame.sprite.Group() # Clear/initialize dragons group for the level
+        self.lead_crystals = pygame.sprite.Group()
 
         # Create player
         self.player = Player(self)
@@ -999,6 +1131,13 @@ class Game:
             self.all_sprites.add(treasure)
             self.treasures.add(treasure)
         self.total_treasures_in_level = len(self.treasures) # Store initial count
+
+        # Lead Crystals
+        if "lead_crystals" in self.level_data:
+            for lc_pos in self.level_data["lead_crystals"]:
+                lead_crystal = LeadCrystal(*lc_pos)
+                self.all_sprites.add(lead_crystal)
+                self.lead_crystals.add(lead_crystal)
 
         # Obstacles
         for o_pos in self.level_data["obstacles"]:
@@ -1084,6 +1223,12 @@ class Game:
         self.all_sprites.add(self.exit_sprite)
 
         self.state = "playing"
+        # Start playing background music if not already playing
+        if not pygame.mixer.music.get_busy():
+            try:
+                pygame.mixer.music.play(loops=-1) # Play indefinitely
+            except pygame.error as e:
+                print(f"Cannot play background music: {e}")
         self.run()
 
     def run(self):
@@ -1264,6 +1409,12 @@ class Game:
             if dragon_sprite.rect.left < 0: dragon_sprite.rect.left = 0; dragon_sprite.pos.x = dragon_sprite.rect.centerx
             if dragon_sprite.rect.right > self.level_width: dragon_sprite.rect.right = self.level_width; dragon_sprite.pos.x = dragon_sprite.rect.centerx
 
+        # Player collects lead crystals
+        lead_crystal_hits = pygame.sprite.spritecollide(self.player, self.lead_crystals, True) # True removes the crystal
+        for _lc_hit in lead_crystal_hits: # Use _lc_hit as the crystal itself is not needed here
+            self.lead_sound.play()
+            self.player.apply_lead_effect()
+
 
     def events(self):
         """Game Loop - Events"""
@@ -1334,6 +1485,13 @@ class Game:
                 state_text += "Distracted"
                 state_color = YELLOW
             self.draw_text(state_text, 18, state_color, SCREEN_WIDTH / 2, 45)
+
+        # Display lead effect status (optional)
+        if self.player.lead_effect_active:
+            time_left = (self.player.lead_effect_end_time - pygame.time.get_ticks()) / 1000
+            if time_left > 0:
+                effect_text = f"Lead Effect: {time_left:.1f}s"
+                self.draw_text(effect_text, 18, LEAD_GRAY, SCREEN_WIDTH / 2, 65)
 
 
         # After drawing everything, flip the display

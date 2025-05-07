@@ -67,8 +67,34 @@ def generate_hit():
     envelope = np.exp(-10 * t / duration)  # Very sharp decay
     return signal * envelope
 
+# Poison lead treasure sound: Eerie, toxic hum with sluggish pulse
+def generate_poison_lead():
+    duration = 0.4  # seconds
+    t = np.linspace(0, duration, int(sample_rate * duration), False)
+    
+    # Low-frequency hum for ominous, heavy feel
+    freq_base = 100  # Hz
+    signal = 0.4 * np.sin(2 * np.pi * freq_base * t)
+    
+    # Dissonant, metallic high tone with slight detuning
+    freq_high = 1500  # Hz
+    signal += 0.2 * np.sin(2 * np.pi * freq_high * t)
+    signal += 0.15 * np.sin(2 * np.pi * (freq_high + 20) * t)  # Detuned for unease
+    
+    # Slow pulsation for sluggish effect
+    pulse_freq = 2  # Hz (slow throb)
+    pulse = 0.3 * (1 + np.sin(2 * np.pi * pulse_freq * t))  # Oscillates between 0.7 and 1.3
+    signal *= pulse
+    
+    # Envelope: Quick attack, slow decay for lingering poison feel
+    envelope = (1 - np.exp(-10 * t / duration)) * np.exp(-2 * t / duration)
+    return signal * envelope
+
+# Generate and save the sound
+
 # Generate and save all sounds
-save_wav('jump.wav', generate_jump())
-save_wav('coin.wav', generate_coin())
-save_wav('roar.wav', generate_roar())
-save_wav('hit.wav', generate_hit())
+# save_wav('jump.wav', generate_jump())
+# save_wav('coin.wav', generate_coin())
+# save_wav('roar.wav', generate_roar())
+# save_wav('hit.wav', generate_hit())
+save_wav('poison_lead.wav', generate_poison_lead())
