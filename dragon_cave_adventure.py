@@ -59,6 +59,9 @@ FIREBALL_SPEED = 5
 # Treasure properties
 TREASURE_SIZE = (20, 20)
 
+# Big Treasure properties
+BIG_TREASURE_SIZE = (50, 50) # Adjust as needed
+
 # Obstacle properties
 OBSTACLE_SIZE = (50, 50)
 
@@ -811,6 +814,20 @@ class Treasure(pygame.sprite.Sprite):
         self.rect.bottom = y
 
 
+class BigTreasure(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image_orig = load_image("big_treasure.png", BIG_TREASURE_SIZE)
+        if self.image_orig is None:
+            self.image = pygame.Surface(BIG_TREASURE_SIZE)
+            self.image.fill(YELLOW) # Fallback color
+        else:
+            self.image = self.image_orig.copy()
+        self.rect = self.image.get_rect()
+        self.rect.centerx = x
+        self.rect.bottom = y
+
+
 class Platform(pygame.sprite.Sprite):
     def __init__(self, x, y, w, h):
         super().__init__()
@@ -912,6 +929,7 @@ class Game:
         self.total_score = 0 # Score across all levels
         self.current_level_index = 0
         self.world_shift = 0
+        self.num_selected_dragons = 1 # Default to 1 dragon
         # level_width and world_rect will be set in new()
         self.level_width = 0
         self.world_rect = None # Will be set based on level width
@@ -919,6 +937,9 @@ class Game:
 
         self.load_data()
         self.dragons = pygame.sprite.Group() # Group for all dragons
+        self.big_treasure_sprite = None
+        self.big_treasure_spawned = False
+        self.total_treasures_in_level = 0
 
     def load_data(self):
         """Load game assets"""
@@ -947,6 +968,9 @@ class Game:
         self.score = 0 # Reset score for the new level
         self.world_shift = 0
         self.newly_landed_rocks.clear() # Clear landed rocks for the new level
+        self.big_treasure_spawned = False
+        self.big_treasure_sprite = None
+        self.total_treasures_in_level = 0
 
         # Sprite groups
         self.all_sprites = pygame.sprite.Group()
@@ -974,6 +998,7 @@ class Game:
             treasure = Treasure(*t_pos)
             self.all_sprites.add(treasure)
             self.treasures.add(treasure)
+        self.total_treasures_in_level = len(self.treasures) # Store initial count
 
         # Obstacles
         for o_pos in self.level_data["obstacles"]:
@@ -983,20 +1008,75 @@ class Game:
             self.platforms.add(obstacle) # Treat obstacles as platforms for collision
 
         # Create Dragon(s)
+        num_to_spawn = self.num_selected_dragons
+        spawned_dragon_positions = []
+
+        # Gather predefined positions from level data
+        predefined_positions_from_level_raw = []
         if "dragons_start" in self.level_data:
-            for d_pos in self.level_data["dragons_start"]:
-                dragon = Dragon(self, *d_pos)
-                self.all_sprites.add(dragon)
-                self.enemies.add(dragon)
-                self.dragons.add(dragon)
-        # Fallback for old single dragon format if any level was missed (though all should be updated)
-        elif "dragon_start" in self.level_data:
-            d_pos = self.level_data["dragon_start"]
-            dragon = Dragon(self, *d_pos)
+            predefined_positions_from_level_raw.extend(self.level_data["dragons_start"])
+        elif "dragon_start" in self.level_data: # Support old single dragon format
+            predefined_positions_from_level_raw.append(self.level_data["dragon_start"])
+
+        # Filter predefined positions to be at least 25% into the level
+        min_spawn_x = self.level_width * 0.25
+        predefined_positions_from_level = [
+            pos for pos in predefined_positions_from_level_raw if pos[0] >= min_spawn_x
+        ]
+
+        # Use predefined positions first, up to num_to_spawn
+        for i in range(min(num_to_spawn, len(predefined_positions_from_level))):
+            spawned_dragon_positions.append(predefined_positions_from_level[i])
+
+        # If more dragons are needed, determine positions for them
+        num_still_to_spawn = num_to_spawn - len(spawned_dragon_positions)
+
+        if num_still_to_spawn > 0:
+            # Gather potential spawn surfaces (tops of actual platforms)
+            # self.platforms group is already populated with Platform and Obstacle objects.
+            candidate_platform_spawn_points = []
+            for plat_sprite in self.platforms.sprites():
+                # Ensure we are spawning on actual Platform instances, not Obstacles
+                if type(plat_sprite) is Platform:
+                    # Dragon constructor expects (game, center_x, bottom_y)
+                    # Platform's rect.top is the y-coordinate of its top edge.
+                    # So, dragon's bottom will be at platform's top.
+                    if plat_sprite.rect.centerx >= min_spawn_x: # Check 25% rule
+                        candidate_platform_spawn_points.append((plat_sprite.rect.centerx, plat_sprite.rect.top))
+
+            if not candidate_platform_spawn_points:
+                # Fallback: if no platforms (e.g. only empty space or unplatformed ground),
+                # use ground level at random x positions. This should be rare if levels
+                # always define ground as platforms.
+                for _ in range(num_still_to_spawn):
+                    spawn_area_start_x = max(50, int(min_spawn_x)) # Ensure at least 25%
+                    spawn_area_end_x = self.level_width - 50
+                    # Ensure valid range for randint
+                    if spawn_area_start_x >= spawn_area_end_x:
+                        # Default to center for very narrow levels if range is invalid
+                        # or if min_spawn_x pushes start beyond end.
+                        rand_x = self.level_width // 2
+                        if rand_x < min_spawn_x: # If center is still too early, push it
+                            rand_x = int(min_spawn_x + (spawn_area_end_x - min_spawn_x)/2) if min_spawn_x < spawn_area_end_x else int(min_spawn_x)
+
+                    else:
+                        rand_x = random.randint(spawn_area_start_x, spawn_area_end_x)
+                    spawned_dragon_positions.append((rand_x, GROUND_LEVEL))
+            else:
+                # Place additional dragons on these platform tops, cycling if necessary
+                for i in range(num_still_to_spawn):
+                    # Cycle through available platform spawn points
+                    chosen_surface_idx = i % len(candidate_platform_spawn_points)
+                    chosen_surface = candidate_platform_spawn_points[chosen_surface_idx]
+                    spawned_dragon_positions.append(chosen_surface)
+        
+        # Now, create the dragons from all determined spawned_dragon_positions
+        for d_pos_data in spawned_dragon_positions:
+            dragon_x_center, dragon_y_bottom = d_pos_data
+            dragon = Dragon(self, dragon_x_center, dragon_y_bottom)
             self.all_sprites.add(dragon)
             self.enemies.add(dragon)
             self.dragons.add(dragon)
-
 
         # Create Exit
         exit_pos = self.level_data["exit_pos"]
@@ -1092,6 +1172,24 @@ class Game:
                             print("Treasure collection noise woke a dragon!")
                             dragon_sprite.wake_up()
                             # Potentially, a single treasure could wake multiple nearby sleeping dragons.
+
+        # Check if all treasures collected to spawn Big Treasure
+        if self.total_treasures_in_level > 0 and len(self.treasures) == 0 and not self.big_treasure_spawned:
+            if self.exit_sprite: # Ensure exit exists
+                # Spawn Big Treasure at the exit location
+                self.big_treasure_sprite = BigTreasure(self.exit_sprite.rect.centerx, self.exit_sprite.rect.bottom)
+                self.all_sprites.add(self.big_treasure_sprite)
+                self.big_treasure_spawned = True
+                print("All treasures collected! A Big Treasure appears!")
+
+        # Player collects Big Treasure
+        if self.big_treasure_sprite and self.big_treasure_sprite.alive(): # Check if it exists and is alive
+            if pygame.sprite.collide_rect(self.player, self.big_treasure_sprite):
+                self.score *= 2 # Double current level's score
+                self.coin_sound.play() # Reuse coin sound
+                self.big_treasure_sprite.kill()
+                self.big_treasure_sprite = None # Clear reference
+                print("Big Treasure collected! Score doubled for this level!")
 
         # Player hits exit
         if pygame.sprite.collide_rect(self.player, self.exit_sprite):
@@ -1245,16 +1343,22 @@ class Game:
         """Display the start screen"""
         self.current_level_index = 0 # Ensure starting from level 1
         self.total_score = 0      # Ensure total score is reset
+        # self.num_selected_dragons = 1 # Reset here or ensure it's handled before calling new game
+
         self.screen.blit(self.background, self.background_rect) # Use game background
-        self.draw_text("Dragon Cave Adventure!", 48, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 4)
-        self.draw_text("Use ARROW keys to move, UP to jump", 22, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
-        self.draw_text("SPACEBAR to drop a rock (distracts awake dragon)", 22, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 40)
-        self.draw_text(f"Collect treasures and clear all {len(LEVELS)} levels!", 22, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 80)
-        self.draw_text("Don't get too close to the sleeping dragon...", 22, YELLOW, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 120)
-        self.draw_text("Press any key to start", 22, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT * 3 / 4)
+        self.draw_text("Dragon Cave Adventure!", 48, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 4 - 20)
+        self.draw_text("Use ARROW keys to move, UP to jump", 22, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 40)
+        self.draw_text("SPACEBAR to drop a rock (distracts awake dragon)", 22, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+        self.draw_text(f"Collect treasures and clear all {len(LEVELS)} levels!", 22, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 40)
+        self.draw_text("Don't get too close to the sleeping dragon...", 22, YELLOW, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 80)
+
+        self.draw_text(f"Number of Dragons (1-5): {self.num_selected_dragons}", 22, LIGHT_BLUE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 120)
+        self.draw_text("Use + / - keys to change. (Or UP/DOWN arrows)", 18, LIGHT_BLUE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 150)
+
+        self.draw_text("Press ENTER to start", 22, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT * 3 / 4 + 20)
         pygame.display.flip()
-        self.wait_for_key()
-        self.state = "playing" # Set state to start the game loop
+        self.handle_start_screen_input() # Changed from wait_for_key
+        # self.state = "playing" # Set state to start the game loop - will be handled by input handler
 
     def show_game_over_screen(self, status):
         """Display game over or game won screen"""
@@ -1273,6 +1377,42 @@ class Game:
         self.draw_text("Press any key to play again (from Level 1)", 22, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT * 3 / 4)
         pygame.display.flip()
         self.wait_for_key()
+
+    def handle_start_screen_input(self):
+        """Pause the game until a key is pressed, handles dragon selection."""
+        waiting = True
+        while waiting and self.running: # Check self.running too
+            self.clock.tick(FPS / 2) # Lower FPS while waiting
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    waiting = False
+                    self.running = False
+                if event.type == pygame.KEYDOWN: # Changed from KEYUP for responsiveness
+                    if event.key == pygame.K_ESCAPE:
+                        waiting = False
+                        self.running = False
+                    elif event.key == pygame.K_PLUS or event.key == pygame.K_EQUALS or event.key == pygame.K_UP:
+                        self.num_selected_dragons = min(5, self.num_selected_dragons + 1)
+                    elif event.key == pygame.K_MINUS or event.key == pygame.K_DOWN:
+                        self.num_selected_dragons = max(1, self.num_selected_dragons - 1)
+                    elif event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER:
+                        waiting = False
+                        self.state = "playing"
+                    # elif event.type == pygame.KEYUP: # Original logic was here for any other key
+                    #     waiting = False # Any other key ends wait, now specifically ENTER
+
+            # Redraw screen to show updated dragon count
+            if waiting and self.running: # Only redraw if still in this loop
+                self.screen.blit(self.background, self.background_rect)
+                self.draw_text("Dragon Cave Adventure!", 48, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 4 - 20)
+                self.draw_text("Use ARROW keys to move, UP to jump", 22, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 40)
+                self.draw_text("SPACEBAR to drop a rock (distracts awake dragon)", 22, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+                self.draw_text(f"Collect treasures and clear all {len(LEVELS)} levels!", 22, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 40)
+                self.draw_text("Don't get too close to the sleeping dragon...", 22, YELLOW, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 80)
+                self.draw_text(f"Number of Dragons (1-5): {self.num_selected_dragons}", 22, LIGHT_BLUE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 120)
+                self.draw_text("Use + / - keys to change. (Or UP/DOWN arrows)", 18, LIGHT_BLUE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 150)
+                self.draw_text("Press ENTER to start", 22, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT * 3 / 4 + 20)
+                pygame.display.flip()
 
     def wait_for_key(self):
         """Pause the game until a key is pressed"""
