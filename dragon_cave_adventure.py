@@ -98,7 +98,7 @@ LEVELS = [
             (400, GROUND_LEVEL),
             (1200, GROUND_LEVEL),
         ],
-        "dragon_start": (1600, GROUND_LEVEL), # Start dragon further away
+        "dragons_start": [(1600, GROUND_LEVEL)], # Start dragon further away
         "exit_pos": (1900, GROUND_LEVEL),
         "level_width": 2000,
     },
@@ -132,7 +132,7 @@ LEVELS = [
             (1300, GROUND_LEVEL),
             (1600, GROUND_LEVEL),
         ],
-        "dragon_start": (1800, GROUND_LEVEL),
+        "dragons_start": [(1800, GROUND_LEVEL)],
         "exit_pos": (1950, GROUND_LEVEL),
         "level_width": 2000,
     },
@@ -171,7 +171,7 @@ LEVELS = [
             (1400, GROUND_LEVEL),
              (1850, GROUND_LEVEL),
         ],
-        "dragon_start": (1900, SCREEN_HEIGHT - 300), # Dragon starts higher
+        "dragons_start": [(1900, SCREEN_HEIGHT - 300)], # Dragon starts higher
         "exit_pos": (2150, GROUND_LEVEL),
         "level_width": 2200,
     },
@@ -216,11 +216,11 @@ LEVELS = [
              (1800, SCREEN_HEIGHT - 160), # Obstacle on platform
              (2200, GROUND_LEVEL), # Near exit
         ],
-        "dragon_start": (2000, GROUND_LEVEL), # Closer to the later part
+        "dragons_start": [(2000, GROUND_LEVEL)], # Closer to the later part
         "exit_pos": (2350, GROUND_LEVEL),
         "level_width": 2400,
     },
-    # Level 5 (Longer level, dragon patrols?) - Let's keep dragon simple for now
+    # Level 5 (Longer level, two dragons)
      {
         "platforms": [
              (0, GROUND_LEVEL, 2600, 40),
@@ -257,11 +257,14 @@ LEVELS = [
              (2100, GROUND_LEVEL),
              (2450, GROUND_LEVEL),
         ],
-        "dragon_start": (2200, GROUND_LEVEL),
+        "dragons_start": [
+            (2200, GROUND_LEVEL),
+            (1400, SCREEN_HEIGHT - 300) # Second dragon on central high platform
+        ],
         "exit_pos": (2550, GROUND_LEVEL),
         "level_width": 2600,
     },
-    # Level 6 (Maze-like platforms, requires careful jumping)
+    # Level 6 (Maze-like platforms, two dragons)
     {
         "platforms": [
             (0, GROUND_LEVEL, 200, 40),
@@ -310,11 +313,14 @@ LEVELS = [
              (2300, SCREEN_HEIGHT - 320), # High obstacle
              (2600, GROUND_LEVEL),
         ],
-        "dragon_start": (2500, SCREEN_HEIGHT - 350), # High up
+        "dragons_start": [
+            (2500, SCREEN_HEIGHT - 350), # Original high up dragon
+            (1000, GROUND_LEVEL)        # Second dragon on ground path
+        ],
         "exit_pos": (2750, GROUND_LEVEL),
         "level_width": 2800,
     },
-    # Level 7 (Requires dropping rocks strategically?)
+    # Level 7 (Requires dropping rocks strategically, two dragons)
      {
         "platforms": [
              (0, GROUND_LEVEL, 2800, 40),
@@ -348,11 +354,14 @@ LEVELS = [
              (2150, GROUND_LEVEL),
              (2450, GROUND_LEVEL), # Obstacle near end
         ],
-        "dragon_start": (950, GROUND_LEVEL), # Dragon starts early, blocking path
+        "dragons_start": [
+            (950, GROUND_LEVEL),        # Original early dragon
+            (1800, SCREEN_HEIGHT - 350) # Second dragon near high point
+        ],
         "exit_pos": (2750, GROUND_LEVEL),
         "level_width": 2800,
     },
-     # Level 8 (More complex fireball dodging sections)
+     # Level 8 (More complex fireball dodging sections, two dragons)
      {
          "platforms": [
              (0, GROUND_LEVEL, 3000, 40),
@@ -384,19 +393,22 @@ LEVELS = [
              (2850, SCREEN_HEIGHT - 150),
              (400, GROUND_LEVEL), (1400, GROUND_LEVEL), (2100, GROUND_LEVEL), (2950, GROUND_LEVEL)
          ],
-         "obstacles": [
+        "obstacles": [
              (600, GROUND_LEVEL),
              (900, SCREEN_HEIGHT - 200), # Obstacle on platform
              (1600, GROUND_LEVEL),
              (1800, SCREEN_HEIGHT - 350), # High obstacle
              (2400, GROUND_LEVEL),
              (2700, SCREEN_HEIGHT - 180), # Obstacle near end
-         ],
-         "dragon_start": (1100, SCREEN_HEIGHT - 150), # Dragon positioned over narrow ledges
+        ],
+        "dragons_start": [
+            (1100, SCREEN_HEIGHT - 150), # Original dragon over narrow ledges
+            (2400, GROUND_LEVEL)        # Second dragon on ground near end
+        ],
          "exit_pos": (2950, GROUND_LEVEL),
          "level_width": 3000,
      },
-    # Level 9 (Very high platforms, risk of falling)
+    # Level 9 (Very high platforms, risk of falling, two dragons)
      {
         "platforms": [
              # Minimal ground
@@ -440,11 +452,14 @@ LEVELS = [
              (2100, SCREEN_HEIGHT - 300),
              (2500, SCREEN_HEIGHT - 350),
         ],
-        "dragon_start": (1700, SCREEN_HEIGHT - 150), # Mid-level, near peak
+        "dragons_start": [
+            (1700, SCREEN_HEIGHT - 150), # Original mid-level dragon
+            (300, SCREEN_HEIGHT - 150)  # Second dragon on early high platform
+        ],
         "exit_pos": (2950, GROUND_LEVEL),
         "level_width": 3000,
     },
-     # Level 10 (Final challenge: long, complex, dragon near exit)
+     # Level 10 (Final challenge: long, complex, THREE dragons near exit)
      {
         "platforms": [
              (0, GROUND_LEVEL, 3500, 40), # Very long ground
@@ -493,7 +508,11 @@ LEVELS = [
              (3150, GROUND_LEVEL),
              (3350, GROUND_LEVEL), # Obstacle right before exit
         ],
-        "dragon_start": (3100, GROUND_LEVEL), # Dragon guarding the exit
+        "dragons_start": [
+            (3100, GROUND_LEVEL),       # Original dragon guarding the exit
+            (1500, SCREEN_HEIGHT - 350), # Second dragon mid-level, high platform
+            (600, SCREEN_HEIGHT - 300)   # Third dragon on early high platform
+        ],
         "exit_pos": (3450, GROUND_LEVEL),
         "level_width": 3500,
     },
@@ -899,6 +918,7 @@ class Game:
         self.newly_landed_rocks = [] # Track rocks landing this frame
 
         self.load_data()
+        self.dragons = pygame.sprite.Group() # Group for all dragons
 
     def load_data(self):
         """Load game assets"""
@@ -936,6 +956,7 @@ class Game:
         self.fireballs = pygame.sprite.Group()
         self.dropped_rocks = pygame.sprite.Group()
         self.enemies = pygame.sprite.Group() # Group for things that hurt player
+        self.dragons = pygame.sprite.Group() # Clear/initialize dragons group for the level
 
         # Create player
         self.player = Player(self)
@@ -961,11 +982,21 @@ class Game:
             self.obstacles.add(obstacle)
             self.platforms.add(obstacle) # Treat obstacles as platforms for collision
 
-        # Create Dragon
-        dragon_pos = self.level_data["dragon_start"]
-        self.dragon = Dragon(self, *dragon_pos)
-        self.all_sprites.add(self.dragon)
-        self.enemies.add(self.dragon)
+        # Create Dragon(s)
+        if "dragons_start" in self.level_data:
+            for d_pos in self.level_data["dragons_start"]:
+                dragon = Dragon(self, *d_pos)
+                self.all_sprites.add(dragon)
+                self.enemies.add(dragon)
+                self.dragons.add(dragon)
+        # Fallback for old single dragon format if any level was missed (though all should be updated)
+        elif "dragon_start" in self.level_data:
+            d_pos = self.level_data["dragon_start"]
+            dragon = Dragon(self, *d_pos)
+            self.all_sprites.add(dragon)
+            self.enemies.add(dragon)
+            self.dragons.add(dragon)
+
 
         # Create Exit
         exit_pos = self.level_data["exit_pos"]
@@ -1048,19 +1079,23 @@ class Game:
             self.score += 1
             self.coin_sound.play()
             # Check if collecting treasure wakes dragon (optional noise mechanic)
-            if self.dragon.state == "sleeping":
-                 dist_to_dragon = self.player.pos.distance_to(self.dragon.pos)
-                 # Make noise more likely to wake dragon if closer
-                 # Ensure DRAGON_WAKE_RANGE is not zero to avoid division error
-                 if DRAGON_WAKE_RANGE > 0:
-                    wake_chance = max(0, (DRAGON_WAKE_RANGE * 1.5 - dist_to_dragon) / (DRAGON_WAKE_RANGE * 1.5))
-                    if random.random() < wake_chance * 0.5: # 50% chance based on proximity
-                        print("Treasure collection noise woke the dragon!")
-                        self.dragon.wake_up()
+            for dragon_sprite in self.dragons: # Iterate through all dragons
+                if dragon_sprite.state == "sleeping":
+                    # Player position is self.player.pos (Vector2 for center)
+                    # Dragon position is dragon_sprite.pos (Vector2 for center)
+                    dist_to_dragon = self.player.pos.distance_to(dragon_sprite.pos)
+                    # Make noise more likely to wake dragon if closer
+                    # Ensure DRAGON_WAKE_RANGE is not zero to avoid division error
+                    if DRAGON_WAKE_RANGE > 0:
+                        wake_chance = max(0, (DRAGON_WAKE_RANGE * 1.5 - dist_to_dragon) / (DRAGON_WAKE_RANGE * 1.5))
+                        if random.random() < wake_chance * 0.5: # 50% chance based on proximity
+                            print("Treasure collection noise woke a dragon!")
+                            dragon_sprite.wake_up()
+                            # Potentially, a single treasure could wake multiple nearby sleeping dragons.
 
         # Player hits exit
         if pygame.sprite.collide_rect(self.player, self.exit_sprite):
-            print(f"Level {self.current_level_index + 1} Complete!")
+            print(f"Level {self.current_level_index + 1}/{len(LEVELS)} Complete!")
             self.total_score += self.score # Add level score to total
             self.current_level_index += 1
             self.playing = False # Exit current level loop
@@ -1073,23 +1108,39 @@ class Game:
         enemy_hits = pygame.sprite.spritecollide(self.player, self.enemies, False, pygame.sprite.collide_rect_ratio(0.8)) # Smaller hitbox
         fireball_hits = pygame.sprite.spritecollide(self.player, self.fireballs, True, pygame.sprite.collide_rect_ratio(0.8)) # Fireballs disappear on hit
 
-        if enemy_hits or fireball_hits:
+        player_hit_active_dragon = False
+        if enemy_hits:
+            for enemy in enemy_hits:
+                if isinstance(enemy, Dragon) and enemy.state != "sleeping":
+                    player_hit_active_dragon = True
+                    break
+        
+        if player_hit_active_dragon or fireball_hits:
             # Only lose if dragon is awake OR if hit by a fireball (which only exists if dragon is awake/shooting)
-            if self.dragon.state != "sleeping" or fireball_hits:
-                print("Game Over!")
-                self.hit_sound.play()
-                self.playing = False # Exit current level loop
-                self.state = "game_over_lose"
+            # This condition is now handled by player_hit_active_dragon
+            print("Game Over!")
+            self.hit_sound.play()
+            self.playing = False # Exit current level loop
+            self.state = "game_over_lose"
 
 
         # Check for distraction by newly landed rocks
-        if self.dragon.state != "sleeping":
-             for rock in self.newly_landed_rocks:
-                  if rock.land_pos:
-                       dist_to_dragon = rock.land_pos.distance_to(self.dragon.pos)
-                       if dist_to_dragon < LAND_SOUND_RADIUS:
-                            self.dragon.get_distracted(rock.land_pos)
-                            rock.kill() # Remove the rock once it distracts
+        rocks_to_kill_after_distraction = []
+        for rock in self.newly_landed_rocks:
+            if rock.land_pos:
+                if rock in rocks_to_kill_after_distraction: # Already processed this rock
+                    continue
+                for dragon_sprite in self.dragons:
+                    if dragon_sprite.state != "sleeping": # Only active dragons can be distracted
+                         dist_to_dragon_from_rock = rock.land_pos.distance_to(dragon_sprite.pos)
+                         if dist_to_dragon_from_rock < LAND_SOUND_RADIUS:
+                              dragon_sprite.get_distracted(rock.land_pos)
+                              rocks_to_kill_after_distraction.append(rock)
+                              break # This rock has distracted a dragon, its purpose is served.
+        
+        for rock_to_kill in rocks_to_kill_after_distraction:
+            if rock_to_kill.alive(): # Check if it wasn't killed by something else
+                rock_to_kill.kill()
 
         # Clear the list after checking (do this once per frame)
         self.newly_landed_rocks.clear()
@@ -1111,8 +1162,9 @@ class Game:
         # Keep player and dragon within world bounds (mostly handled in sprites, but good failsafe)
         if self.player.rect.left < 0: self.player.rect.left = 0; self.player.pos.x = self.player.rect.centerx
         if self.player.rect.right > self.level_width: self.player.rect.right = self.level_width; self.player.pos.x = self.player.rect.centerx
-        if self.dragon.rect.left < 0: self.dragon.rect.left = 0; self.dragon.pos.x = self.dragon.rect.centerx
-        if self.dragon.rect.right > self.level_width: self.dragon.rect.right = self.level_width; self.dragon.pos.x = self.dragon.rect.centerx
+        for dragon_sprite in self.dragons:
+            if dragon_sprite.rect.left < 0: dragon_sprite.rect.left = 0; dragon_sprite.pos.x = dragon_sprite.rect.centerx
+            if dragon_sprite.rect.right > self.level_width: dragon_sprite.rect.right = self.level_width; dragon_sprite.pos.x = dragon_sprite.rect.centerx
 
 
     def events(self):
@@ -1168,14 +1220,22 @@ class Game:
 
 
         # Draw Dragon State (for debugging/clarity)
-        if self.dragon.state == "sleeping":
-            self.draw_text("Dragon: Zzzz", 18, WHITE, SCREEN_WIDTH / 2, 45)
-        elif self.dragon.state == "waking":
-             self.draw_text("Dragon: Waking...", 18, YELLOW, SCREEN_WIDTH / 2, 45)
-        elif self.dragon.state == "chasing":
-             self.draw_text("Dragon: AWAKE!", 18, RED, SCREEN_WIDTH / 2, 45)
-        elif self.dragon.state == "distracted":
-              self.draw_text("Dragon: Distracted", 18, YELLOW, SCREEN_WIDTH / 2, 45)
+        if self.dragons and self.dragons.sprites(): # Check if the group is not empty and has sprites
+            first_dragon = self.dragons.sprites()[0]
+            state_text = "Dragon(s): "
+            state_color = WHITE
+            if first_dragon.state == "sleeping":
+                state_text += "Zzzz"
+            elif first_dragon.state == "waking":
+                state_text += "Waking..."
+                state_color = YELLOW
+            elif first_dragon.state == "chasing":
+                state_text += "AWAKE!"
+                state_color = RED
+            elif first_dragon.state == "distracted":
+                state_text += "Distracted"
+                state_color = YELLOW
+            self.draw_text(state_text, 18, state_color, SCREEN_WIDTH / 2, 45)
 
 
         # After drawing everything, flip the display
